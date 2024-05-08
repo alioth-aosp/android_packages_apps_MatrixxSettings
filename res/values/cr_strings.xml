@@ -1338,4 +1338,8 @@
     <string name="custom_fp_icon_summary">Enable custom UDFPS Icon from files</string>
     <string name="custom_fp_select_title">Select Custom UDFPS Icon</string>
     <string name="custom_fp_select_summary">Select custom image from your saved files or gallery</string>
+
+    <!-- IME Space -->
+    <string name="navigation_bar_ime_space_title">IME space</string>
+    <string name="navigation_bar_ime_space_summary">Add space below keyboard when navigation hint is disabled</string>
 </resources>
