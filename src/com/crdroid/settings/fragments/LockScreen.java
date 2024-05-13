@@ -207,6 +207,11 @@ public class LockScreen extends SettingsPreferenceFragment
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
             startActivityForResult(intent, REQUEST_PICK_IMAGE);
+        return true;
+        } else if (preference == mDepthWallpaperCustomImagePicker) {
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            intent.setType("image/*");
+            startActivityForResult(intent, 10001);
             return true;
         }
         return super.onPreferenceTreeClick(preference);
@@ -256,19 +261,29 @@ public class LockScreen extends SettingsPreferenceFragment
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent result) {
-       if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK) {
-           Uri uri = null;
-           if (result != null) {
-               uri = result.getData();
-               setPickerIcon(uri.toString());
-               Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON,
-                   uri.toString());
-            }
+        if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+            Uri uri = null;
+        if (result != null) {
+            uri = result.getData();
+            setPickerIcon(uri.toString());
+            Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON,
+                uri.toString());
+        }
         } else if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_CANCELED) {
             mCustomFPImage.setIcon(new ColorDrawable(Color.TRANSPARENT));
-            Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON, "");
+        Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON, "");
+        } else if (requestCode == 10001 && resultCode == Activity.RESULT_OK) {
+            final Uri imgUri = result.getData();
+            if (imgUri != null) {
+            String savedImagePath = saveImageToInternalStorage(getContext(), imgUri);
+            if (savedImagePath != null) {
+                ContentResolver resolver = getContext().getContentResolver();
+                Settings.System.putStringForUser(resolver, "depth_wallpaper_subject_image_uri", savedImagePath, UserHandle.USER_CURRENT);
+                }
+            }
         }
     }
+
 
     private void setPickerIcon(String uri) {
         try {
@@ -331,35 +346,6 @@ public class LockScreen extends SettingsPreferenceFragment
     @Override
     public int getMetricsCategory() {
         return MetricsProto.MetricsEvent.CRDROID_SETTINGS;
-    }
-
-    @Override
-    public boolean onPreferenceTreeClick(Preference preference) {
-        if (preference == mDepthWallpaperCustomImagePicker) {
-            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*");
-            startActivityForResult(intent, 10001);
-            return true;
-        }
-        return super.onPreferenceTreeClick(preference);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent result) {
-        if (requestCode == 10001) {
-            if (resultCode != Activity.RESULT_OK) {
-                return;
-            }
-
-            final Uri imgUri = result.getData();
-            if (imgUri != null) {
-                String savedImagePath = saveImageToInternalStorage(getContext(), imgUri);
-                if (savedImagePath != null) {
-                    ContentResolver resolver = getContext().getContentResolver();
-                    Settings.System.putStringForUser(resolver, "depth_wallpaper_subject_image_uri", savedImagePath, UserHandle.USER_CURRENT);
-                }
-            }
-        }
     }
 
     private String saveImageToInternalStorage(Context context, Uri imgUri) {
